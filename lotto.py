@@ -512,6 +512,7 @@ past_winning_numbers = [
     [6, 7, 19, 28, 34, 41],
     [13, 14, 20, 28, 29, 34],
     [3, 7, 9, 13, 19, 24],
+    [1, 6, 13, 19, 21, 33],
 ]
 
 def calculate_frequencies(past_numbers):
