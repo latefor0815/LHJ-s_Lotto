@@ -1,6 +1,6 @@
 import random
 from collections import Counter
-
+import os
 # 과거 당첨 번호 데이터 예시 (보너스 번호 제외, 전체 494회차 데이터 추가)
 past_winning_numbers = [
     [10, 23, 29, 33, 37, 40],
@@ -516,7 +516,9 @@ past_winning_numbers = [
     [21, 33, 35, 38, 42, 44],
     [5, 12, 15, 30, 37, 40],
     [7, 10, 22, 29, 31, 38],
+    [7, 11, 12, 21, 26, 35],
 ]
+
 
 def calculate_frequencies(past_numbers):
     """
@@ -525,35 +527,47 @@ def calculate_frequencies(past_numbers):
     flat_numbers = [num for sublist in past_numbers for num in sublist]
     return Counter(flat_numbers)
 
-def weighted_random_choice(frequencies):
+
+def weighted_random_choice(frequencies, available_numbers):
     """
     번호의 빈도를 가중치로 사용하여 무작위로 번호를 선택합니다.
     """
-    total = sum(frequencies.values())
+    total = sum(frequencies[num] for num in available_numbers)
     rand = random.uniform(0, total)
     upto = 0
-    for number, freq in frequencies.items():
+    for number in available_numbers:
+        freq = frequencies[number]
         if upto + freq >= rand:
             return number
         upto += freq
-    return list(frequencies.keys())[0]
+    return available_numbers[0]
+
 
 def generate_weighted_lotto_numbers(frequencies, count=6):
     """
     가중치 기반으로 번호를 선택하여 로또 번호 세트를 생성합니다.
     """
     selected_numbers = set()
+    available_numbers = list(frequencies.keys())  # 리스트로 변환
+
     while len(selected_numbers) < count:
-        selected_numbers.add(weighted_random_choice(frequencies))
+        number = weighted_random_choice(frequencies, available_numbers)
+        selected_numbers.add(number)
+        available_numbers.remove(number)  # 중복 방지
+
     return sorted(selected_numbers)
+
 
 if __name__ == "__main__":
     print("Starting the program...")
     frequencies = calculate_frequencies(past_winning_numbers)
     print("Frequencies:", frequencies)
 
-    num_sets = 5  # 생성할 세트의 개수
+    # 기존 생성된 세트의 번호를 추적하기 위한 리스트
+    num_sets = 25  # 생성할 세트의 개수
     sets = []
+
+    # 가중치 기반 로또 번호 세트 생성
     for i in range(num_sets):
         weighted_numbers = generate_weighted_lotto_numbers(frequencies)
         sets.append(weighted_numbers)
@@ -561,8 +575,27 @@ if __name__ == "__main__":
 
     print("Program finished.")
 
+    # 파일 저장 경로 지정 (C:\Users\user\OneDrive\바탕 화면\데이터\LHJ-s_Lotto0919)
+    file_directory = r"C:\Users\user\OneDrive\바탕 화면\데이터\LHJ-s_Lotto0919"
+    os.makedirs(file_directory, exist_ok=True)
+
     # 결과를 파일에 저장
-    with open("generated_lotto_sets.txt", "w") as file:
+    with open(os.path.join(file_directory, "generated_lotto_sets.txt"), "w") as file:
         for i, lotto_set in enumerate(sets):
             file.write(f"Set {i + 1}: {lotto_set}\n")
     print("Results saved to generated_lotto_sets.txt")
+
+    # 새로운 세트 생성 (기존 번호와 관계없이 독립적으로 생성)
+    all_numbers = list(range(1, 46))  # 로또 번호 1~45를 리스트로 변환
+
+    new_sets = []
+    for i in range(5):
+        new_lotto_set = sorted(random.sample(all_numbers, 6))  # 리스트에서 번호 선택
+        new_sets.append(new_lotto_set)
+        print(f"Generated Lotto Numbers (New Independent Sets) - Set {i + 1}: {new_lotto_set}")
+
+    # 새로운 세트를 파일에 저장
+    with open(os.path.join(file_directory, "new_lotto_sets.txt"), "w") as file:
+        for i, new_lotto_set in enumerate(new_sets):
+            file.write(f"New Set {i + 1}: {new_lotto_set}\n")
+    print("New 5 sets saved to new_lotto_sets.txt")
